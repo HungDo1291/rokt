@@ -57,8 +57,8 @@ class SQLConnector():
                            host, port):
 
         if database_type == 'sqlite':
-            url = 'sqlite:///sqlite3_test.db'
-            # url = 'sqlite:///{}'.format(os.path.join('resources', 'sqlite3_test.db'))
+            # url = 'sqlite:///sqlite3_test.db'
+            url = 'sqlite:///{}'.format(os.path.join('rokt', 'resources', 'sqlite3_test.db'))
         else:
             url = sqla.engine.url.URL(database_type,
                                       user, password,
@@ -73,6 +73,10 @@ class SQLConnector():
     def get_connection(self):
         connection = self.__engine.connect()
         return connection
+
+    def close_all_connections(self):
+        self.__engine.dispose()
+
 
     # def get_session(self):
     #     # create session
