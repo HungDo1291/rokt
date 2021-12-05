@@ -1,78 +1,94 @@
+# TODO: change name to pipeline
 import os, glob, getopt, sys
 from rokt.sql_connector import SQLConnector
 import pandas as pd
 import sqlalchemy as sqla
-from datetime import datetime as dt
+import argparse
 
-def get_io(argument_list):
+# def get_io(argument_list):
 
-    # default arguments
-    inputpath = 'resources'
-    database_type = 'sqlite'  # for mysql, use 'mysql+pymysql'
-    database_name = ''
-    user = ''
-    password = ''
-    host = ''
-    port = ''
-    commit = False
-
-    short_options = "hi:t:n:u:p:s:r:c"
-    long_options = ["help", "inputpath=",  "database_type=", "database_name=", "user=", "password=", "host=", "port=", "commit"]
-    try:
-        opts, args = getopt.getopt(argument_list, short_options, long_options)
-    except getopt.error as err:
-        # Output error, and return with an error code
-        print(str(err))
-        sys.exit(2)
-
-    for opt, arg in opts:
-        if opt in ('-h', '--help'):
-            print('To use this software package, use the command:')
-            print(
-                '"python -m rokt.parser -i <input path> -s <sql credentials file> -d <database name> (-c)"')
-            print('"-c" is added only if you want to commit the change to the database.')
-            print('If the input and output paths are not provided, the following default values are used: ')
-            print('inputpath = "/resources", ')
-            print('databasetype = "sqlite", and we will use the test db in resources folder ')
-            print('database name = "events", ')
-            print('So you can simply use the commands: `python -m rokt.parser` or `python -m rokt.parser -c`.')
-            sys.exit()
-        elif opt in ("-i", "--inputpath"):
-            inputpath = arg
-        elif opt in ("-t", "--database_type"):
-            database_type = arg
-        elif opt in ("-n", "--database_name"):
-            database_name = arg
-        elif opt in ("-u", "--user"):
-            user = arg
-        elif opt in ("-p", "--password"):
-            password = arg
-        elif opt in ("-s", "--host"):
-            host = arg
-        elif opt in ("-r", "--port"):
-            port = arg
-        elif opt in ("-c", "--commit"):
-            commit = True
-
-    return inputpath, database_type, database_name, user, password, host, port, commit
+    # # default arguments
+    # inputpath = 'resources'
+    # database_type = 'sqlite'  # for mysql, use 'mysql+pymysql'
+    # database_name = ''
+    # user = ''
+    # password = ''
+    # host = ''
+    # port = ''
+    # commit = False
+    #
+    # short_options = "hi:t:n:u:p:s:r:c"
+    # long_options = ["help", "inputpath=",  "database_type=", "database_name=", "user=", "password=", "host=", "port=", "commit"]
+    # try:
+    #     opts, args = getopt.getopt(argument_list, short_options, long_options)
+    # except getopt.error as err:
+    #     # Output error, and return with an error code
+    #     print(str(err))
+    #     sys.exit(2)
+    #
+    # for opt, arg in opts:
+    #     if opt in ('-h', '--help'):
+    #         print('To use this software package, use the command:')
+    #         print(
+    #             '"python -m rokt.parser -i <input path> -s <sql credentials file> -d <database name> (-c)"')
+    #         print('"-c" is added only if you want to commit the change to the database.')
+    #         print('If the input and output paths are not provided, the following default values are used: ')
+    #         print('inputpath = "/resources", ')
+    #         print('databasetype = "sqlite", and we will use the test db in resources folder ')
+    #         print('database name = "events", ')
+    #         print('So you can simply use the commands: `python -m rokt.parser` or `python -m rokt.parser -c`.')
+    #         sys.exit()
+    #     elif opt in ("-i", "--inputpath"):
+    #         inputpath = arg
+    #     elif opt in ("-t", "--database_type"):
+    #         database_type = arg
+    #     elif opt in ("-n", "--database_name"):
+    #         database_name = arg
+    #     elif opt in ("-u", "--user"):
+    #         user = arg
+    #     elif opt in ("-p", "--password"):
+    #         password = arg
+    #     elif opt in ("-s", "--host"):
+    #         host = arg
+    #     elif opt in ("-r", "--port"):
+    #         port = arg
+    #     elif opt in ("-c", "--commit"):
+    #         commit = True
+    #
+    # return inputpath, database_type, database_name, user, password, host, port, commit
 
 
 if __name__ == '__main__':
-
+    parser = argparse.ArgumentParser(description='digest sample files')
+    parser.add_argument('-i', '--input_path', type=str)
+    parser.add_argument('-t', "--database_type", type=str)
+    parser.add_argument("-n", "--database_name", type=str)
+    parser.add_argument("-u", "--user", type=str)
+    parser.add_argument("-p", "--password", type=str)
+    parser.add_argument("-s", "--host", type=str)
+    parser.add_argument("-r", "--port", type=int)
+    parser.add_argument("-c", "--commit", type=bool)
     # get command line arguments
-    args = sys.argv[1:]
+    args = parser.parse_args()
 
     if not args:
         print('no command line arguments. ')
         print('To learn commandline options, type "python -m processor -h")')
     else:
         print('the command line arguments that you passed are ', args, '\n')
-        inputpath, database_type, database_name, user, password, host, port, commit = get_io(sys.argv[1:])
-        print(inputpath, database_type, database_name, user, password, host, port, commit)
+        input_path = args.input_path
+        database_type = args.database_type
+        database_name = args.database_name
+        user = args.user
+        password = args.password
+        host = args.host
+        port = args.port
+        commit = args.commit
+        print(input_path, database_type, database_name, user, password, host, port, commit)
 
     # get all csv== files from the input path
     # files = glob.glob(os.path.join(ROOT_DIR, inputpath, '*.txt'))
-    files = glob.glob(inputpath)
+    files = glob.glob(input_path)
 
     # print list of files
     print('---list of uploaded csv files----')
@@ -111,6 +127,7 @@ if __name__ == '__main__':
 
             # print(df)
             # prepare data from df to dictionary
+            # TODO: truncate the table before running, change to df.to_sql instead of uploading row by row.
             for i, row in df.iterrows():  # note that each rows has to be processed separately due to null entries that are dropped
                 d = row.to_dict()
                 data = {k: v for k, v in d.items() if pd.notnull(v)}  # drop null values since null dates cannot be inserted as far as I tried
