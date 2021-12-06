@@ -56,10 +56,9 @@ class SQLConnector():
                            user, password,
                            host, port):
 
-        if database_type == 'sqlite':
-            # url = 'sqlite:///sqlite3_test.db'
+        if database_type == 'sqlite':  # inbuilt sqlite for testing
             url = 'sqlite:///{}'.format(os.path.join('rokt', 'resources', 'sqlite3_test.db'))
-        else:
+        else:  # connect to external SQL database
             url = sqla.engine.url.URL(database_type,
                                       user, password,
                                       host, port,

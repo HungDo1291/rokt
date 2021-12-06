@@ -11,8 +11,12 @@ connection = sql_connector.get_connection()
 transaction = connection.begin()
 
 
+@app.route('/')
+def web():
+    return "<p>Thanks</p>"
+
 @app.route('/', methods=["POST"])
-def hello_world():
+def api():
     req = request.get_json()
     # TODO: rewrite raw SQL command with SQLAlchemy
     df = pd.read_sql(f'select * from events '

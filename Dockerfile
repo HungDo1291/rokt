@@ -6,8 +6,14 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
-RUN python -m rokt.parser -i /user/src/app/rokt/resources/sample1.txt -t sqlite
+ARG INPUT_PATH=${INPUT_PATH}
+ARG DATABASE_TYPE=${DATABASE_TYPE}
 
-RUN set FLASK_APP=rokt/exposer.py
 
-CMD ["flask", "run"]
+RUN python -m rokt.parser -i ${INPUT_PATH} -t ${DATABASE_TYPE} -c True
+
+ENV FLASK_APP rokt/exposer.py
+
+EXPOSE 8279
+
+CMD ["flask", "run", "-p", "8279", "-h", "0.0.0.0"]
