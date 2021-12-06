@@ -21,21 +21,14 @@ class SQLConnector:
         self.__engine = sqla.create_engine(self.__db_connection_url, echo=echo)
         print('---connected to database ---')
 
-        base = declarative_base()
-        self.__metadata = sqla.MetaData(bind=self.__engine, reflect=True)
-
-        # create events table in database
-        try:
-            events_table = self.__metadata.tables['events']
-        except KeyError:
-            print('Table events does not exits in this database.')
-            events_table = None
-
-        if events_table is not None:  # if table already exists in database, drop it.
+        if self.__engine.dialect.has_table(self.__engine, 'events'):  # if table already exists in database, drop it.
             print('Table already exists in this database. Dropping this table...')
-            base.metadata.drop_all(self.__engine, [events_table], checkfirst=True)
+            base = declarative_base()
             self.__metadata = sqla.MetaData(bind=self.__engine, reflect=True)
+            events_table = self.__metadata.tables['events']
+            base.metadata.drop_all(self.__engine, [events_table], checkfirst=True)
 
+        self.__metadata = sqla.MetaData(bind=self.__engine, reflect=True)
         # Create table events
         print('Creating table... ')
         # Describe a table with the appropriate Columns
@@ -54,8 +47,6 @@ class SQLConnector:
         # Create the table
         self.__metadata.create_all()
 
-
-
     def get_connection_url(self, database_type, database_name,
                            user, password,
                            host, port):
@@ -73,9 +64,9 @@ class SQLConnector:
     def get_engine(self):
         return self.__engine
 
-    # def get_connection(self):
-    #     connection = self.__engine.connect()
-    #     return connection
+    def get_connection(self):
+        connection = self.__engine.connect()
+        return connection
     #
     # def close_all_connections(self):
     #     self.__engine.dispose()
@@ -84,9 +75,39 @@ class SQLConnector:
         table = self.__metadata.tables[table_name]
         return table
 
+    def execute_to_df(self, command, commit=False, display=False):
+        print('... Executing command: ')
+        if display:
+            print(command)
+
+        # initialize connection
+        connection = self.get_connection()
+        transaction = connection.begin()  # start a transaction that commit only if successful
+
+        try:
+            results_proxy = connection.execute(command)
+            print('Successfully executed!')
+            if commit:  # commit only if user specify commit=Tue. This is to prevent loading the same data 2 times
+                transaction.commit()
+                print('Committed.')
+            else:
+                transaction.rollback()
+                print('But rolled back anyway. To commit, explicitly set commit=True in run_processor')
+        except Exception as e:
+            transaction.rollback()  # roll back if execution has error
+            print('Query FAILED! Rolled back.')
+            print(e)  # print the error
+
+        # close current session and connections,
+        # otherwise new connection in loader would not work
+        self.get_engine().dispose()
+        print('Closed connection to the database')
+
+        return Results(results_proxy).to_df()
+
 
 class Results(result.ResultProxy):
-    # This functions extend sqlalchemy query results,
+    # This function extends sqlalchemy query results,
     # adding functions that convert query result to dataframe and df chunk
     def __init__(self, results_proxy):
         context = results_proxy.context

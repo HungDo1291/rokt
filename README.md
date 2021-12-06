@@ -31,7 +31,7 @@ and the default values will be used, running sample input files and test sqlite 
 
 ### c) Parameters
 
-- INPUT_PATH: Path to the input file inside the container. If you have more than one file, you can use regex `*` such as `path/*.txt`. Default value is `/usr/src/app/rokt/resources/sample1.txt`. 
+- INPUT_PATH: Path to the input file inside the container. If you have more than one file, you can use regex `*` such as `path/*.txt`. Default value is `/usr/src/app/rokt/resources/*.txt`. 
 - DATABASE_TYPE: Type of database, for example `mysql+pymysql`. Default value is `sqlite`.
 - DATABASE_NAME: The database name. Default value is `events`.
 - USER: The username for the database. Default value is `root`.
