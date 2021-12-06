@@ -1,6 +1,9 @@
 # pycharm
 .idea/
 
+# input files
+input/
+
 __pycache__
 *.py[cod]
 *$py.class
