@@ -11,7 +11,7 @@ if __name__ == '__main__':
     """ parse command line arguments """
     """------------------------------"""
     parser = argparse.ArgumentParser(description='digest sample files')
-    default_input_path = '/user/src/app/rokt/resources/sample1.txt'
+    default_input_path = '/usr/src/app/rokt/resources/sample1.txt'
     parser.add_argument('-i', '--input_path', type=str, default=default_input_path,
                         nargs='?', const=default_input_path)
     parser.add_argument('-t', "--database_type", type=str, default='sqlite', nargs='?', const='sqlite')
