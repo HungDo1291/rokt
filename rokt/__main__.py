@@ -1,9 +1,11 @@
-import glob
+import glob, os
 import argparse
 
 from rokt.sql_connector import SQLConnector
-from rokt.data_pipeline import data_pipeline
+from rokt.data_pipeline import process_chunk
 from rokt.api_server import api_server
+from joblib import Parallel, delayed,parallel_backend
+import pandas as pd
 
 if __name__ == '__main__':
 
@@ -53,8 +55,40 @@ if __name__ == '__main__':
                                  echo=(not commit))  # do not print sql command in production mode
 
     """----------------------------------"""
-    """ run data pipeline and API server """
+    """ run data pipeline                """
     """----------------------------------"""
-    data_pipeline(sql_connector, database_type, files, commit)
+    engine = sql_connector.get_engine()
+    connection = engine.connect()
+    transaction = connection.begin()
 
+    # process each input file
+    for full_path in files:
+        print('---processing ', full_path)
+        filename = os.path.split(full_path)[-1]
+
+        # read every input file by chunks of 10000 rows
+        chunks = pd.read_csv(full_path, sep=' ', header=None, dtype='str', chunksize=10000)
+
+        # process chunks in parallel
+        with parallel_backend("threading", n_jobs=8):
+            Parallel()(delayed(process_chunk)(df, engine, filename, database_type) for df in chunks)
+
+    # commit if all files are processed without error
+    if commit:  # commit only if user specify commit=True. This is to prevent loading the same data 2 times
+        transaction.commit()
+        print('Committed.')
+    else:
+        transaction.rollback()
+        print('But rolled back anyway. To commit, explicitly set commit=True in run_processor')
+
+    # close all current connections,
+    # otherwise new connections later would not work
+    engine.dispose()
+    print('Closed connection to the database')
+
+    #data_pipeline(sql_connector, database_type, files, commit)
+
+    """----------------------------------"""
+    """ API server                       """
+    """----------------------------------"""
     api_server(sql_connector)
