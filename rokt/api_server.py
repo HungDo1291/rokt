@@ -9,7 +9,7 @@ app = Flask(__name__)
 def api_server(sql_connector, table_name='events'):
 
     @app.route('/')
-    def home_page():
+    def web_page():
         return "<p>API server by Hung Do for Rokt.</p>"
 
     @app.route('/', methods=["POST"])
@@ -31,7 +31,7 @@ def api_server(sql_connector, table_name='events'):
                                    )
 
         df = sql_connector.execute_to_df(command)
-
+        df.loc[:, 'datetime'] = df.loc[:, 'datetime'].dt.strftime('%Y-%m-%dT%H:%M:%SZ')
         ret = df[['datetime', 'email', 'session_id']]
         # reformat the column names
         ret.columns = ['eventTime', 'email', 'sessionId']

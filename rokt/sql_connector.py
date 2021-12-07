@@ -1,10 +1,6 @@
 import sqlalchemy as sqla
 import pandas as pd
-import json
-import os, sys
-
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.automap import automap_base
+import os
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine import result
 
@@ -24,6 +20,8 @@ class SQLConnector:
 
         if table_name == 'events':
             self.drop_and_create_events_table()
+        else:
+            self.__metadata = sqla.MetaData(bind=self.__engine, reflect=True)
 
     def drop_and_create_events_table(self):
         if self.__engine.dialect.has_table(self.__engine, self.table_name):  # if table already exists in database, drop it.
