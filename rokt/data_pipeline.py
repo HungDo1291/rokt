@@ -33,7 +33,7 @@ import pandas as pd
 #     print('Closed connection to the database')
 
 
-def process_chunk(df, engine, filename, database_type):
+def process_chunk(df, engine, filename, database_type, table_name='events'):
     print('...loading data in chunk from row ', df.index[0], ' to ', df.index[-1])
 
     # process the dataframe
@@ -41,7 +41,7 @@ def process_chunk(df, engine, filename, database_type):
 
     # loading dataframe to sql
     try:
-        df.to_sql('events', con=engine, index=False, if_exists='append')
+        df.to_sql(table_name, con=engine, index=False, if_exists='append')
     except Exception as e:
         print('ERROR: ', e, '\n')
     print('...Successfully upload to SQL server!')

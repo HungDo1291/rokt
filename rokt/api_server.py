@@ -3,12 +3,13 @@ from flask import request
 import pandas as pd
 import sqlalchemy as sqla
 
+app = Flask(__name__)
 
-def api_server(sql_connector):
-    app = Flask(__name__)
+
+def api_server(sql_connector, table_name='events'):
 
     @app.route('/')
-    def web():
+    def home_page():
         return "<p>API server by Hung Do for Rokt.</p>"
 
     @app.route('/', methods=["POST"])
@@ -17,7 +18,7 @@ def api_server(sql_connector):
         req = request.get_json()
 
         # query from database
-        t = sql_connector.get_table('events')
+        t = sql_connector.get_table(table_name)
 
         filename = req['filename']
         from_time = pd.to_datetime(req["from"]).strftime('%Y-%m-%d %H:%M:%S')
@@ -36,4 +37,5 @@ def api_server(sql_connector):
         ret.columns = ['eventTime', 'email', 'sessionId']
         return ret.to_json(orient='records')  # convert to json format
 
-    app.run(port=8279, host='0.0.0.0')
+    #app.run(port=8279, host='0.0.0.0')
+    return app

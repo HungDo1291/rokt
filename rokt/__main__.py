@@ -49,11 +49,11 @@ if __name__ == '__main__':
     """---------------------------------"""
     """ connect to the database         """
     """---------------------------------"""
+    table_name = 'events'
     sql_connector = SQLConnector(database_type, database_name,
                                  user, password,
-                                 host, port,
-                                 echo=(not commit))  # do not print sql command in production mode
-
+                                 host, port, table_name=table_name,
+                                 echo=False)  # do not print sql commands
     """----------------------------------"""
     """ run data pipeline                """
     """----------------------------------"""
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
         # process chunks in parallel
         with parallel_backend("threading", n_jobs=8):
-            Parallel()(delayed(process_chunk)(df, engine, filename, database_type) for df in chunks)
+            Parallel()(delayed(process_chunk)(df, engine, filename, database_type, table_name) for df in chunks)
 
     # commit if all files are processed without error
     if commit:  # commit only if user specify commit=True. This is to prevent loading the same data 2 times
@@ -91,4 +91,5 @@ if __name__ == '__main__':
     """----------------------------------"""
     """ API server                       """
     """----------------------------------"""
-    api_server(sql_connector)
+    app = api_server(sql_connector, table_name)
+    app.run(port=8279, host='0.0.0.0')
