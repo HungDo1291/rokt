@@ -4,12 +4,12 @@
 This app does not use any raw SQL commands, thus can ideally connect to an external database with any types of SQL dialect, be it MySQL or PostgreSQL, Redshift, BigQuery, etc. 
 At the moment two types of database are tested: `mysql+pymysql` (localhosted and AWS RDS) and `sqlite` (sqlite is stored in this repo just for testing). 
 
-This app reads every input files in chunks of 10,000 lines each. For a file of a few GBs, one does not really have to parallelize. However I added the parallelization.
+This app reads every input files in chunks of 10,000 lines each. For a file of a few GBs, one does not really need multithreading, however I still add the parallelization.
 
 # Business assumptions
 - The input files are stored in a folder that can be mounted to the container
-- For every operation, the table `events` is dropped if existed and then recreated afresh.
-- All rows with incorrect or empty time are dropped.
+- For every operation, the table `events` is dropped if existed and then recreated afresh. Then, input files are read from one folder and the API server is launched.
+- All rows with incorrect or empty timestamps are dropped.
 
 # Deployment instructions
 
@@ -20,13 +20,12 @@ This app reads every input files in chunks of 10,000 lines each. For a file of a
 - Test with inbuilt sqlite database: `docker run -it --name <container_name>  -p 8279:8279 -e INPUT_PATH=<input_path> -e DATABASE_TYPE=sqlite <image_name:tag>`
 - Production with an external SQL database: `docker run -it --name <container_name> -p 8279:8279 -e INPUT_PATH=<input_path> -e DATABASE_TYPE=<database_type> -e DATABASE_NAME=<database_name> -e USER=<user_name> -e PASSWORD=<password> -e HOST=<host> -e PORT=<port> -c <True/False>  <image_name>:<tag>`
 - If you store the input files externally, you can mount the folder to docker container by `-v /path_to_yourfoler:/usr/src/app/input_or_any_where_else`. 
-
+- For unit testing, run `python -m unittest rokt/tests/test_*.py`
 ### b) Examples
-- For testing, simply run `docker run -it --name rokt_container_test  -p 8279:8279 rokt:v1` 
+- For testing, run `docker run -it --name rokt_container_test -p 8279:8279 -e INPUT_PATH=/usr/src/app/rokt/resources/*.txt -e DATABASE_TYPE=sqlite rokt:v1` 
 and the default values will be used, running sample input files and test sqlite database in this repository.
 - Fot testing with the inbuilt `sqlite` but with different input files: `docker run -it --name rokt_container_test  -p 8279:8279 -v /external_path_to_yourfoler:/usr/src/app/input -e INPUT_PATH=/usr/src/app/input/*.txt -e DATABASE_TYPE=sqlite rokt:v1`.
-- For production  with a locally hosted SQL database (tested on Window): `docker run -it --name rokt_container_prod -p 8279:8279 -e INPUT_PATH=/usr/src/app/rokt/resources/*.txt -e DATABASE_TYPE=mysql+pymysql -e DATABASE_NAME=my_db_name -e USER=root -e PASSWORD=my_password -e HOST=host.docker.internal
- -e PORT=3306 rokt:v1`
+- For production  with a locally hosted SQL database (tested on Window): `1`
 - To connect to AWS RDS for example, set the host to the RDS endpoint, for example `database-name.abcdefghijkkk.ap-southeast-2.rds.amazonaws.com`.
 
 ### c) Parameters

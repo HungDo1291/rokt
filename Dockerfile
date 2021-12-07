@@ -8,4 +8,4 @@ EXPOSE 8279
 
 RUN pip install -r requirements.txt
 
-CMD python -m rokt -i "${INPUT_PATH}" -t "${DATABASE_TYPE}" -n "${DATABASE_NAME}" -u "${USER}" -p "${PASSWORD}" -s "${HOST}" -r ${PORT} -c True
+CMD python -m unittest rokt/tests/test_*.py; python -m rokt -i "${INPUT_PATH}" -t "${DATABASE_TYPE}" -n "${DATABASE_NAME}" -u "${USER}" -p "${PASSWORD}" -s "${HOST}" -r ${PORT} -c True

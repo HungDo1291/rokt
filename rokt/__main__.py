@@ -1,9 +1,11 @@
-import glob
+import glob, os
 import argparse
 
 from rokt.sql_connector import SQLConnector
-from rokt.data_pipeline import data_pipeline
+from rokt.data_pipeline import process_chunk
 from rokt.api_server import api_server
+from joblib import Parallel, delayed,parallel_backend
+import pandas as pd
 
 if __name__ == '__main__':
 
@@ -47,14 +49,47 @@ if __name__ == '__main__':
     """---------------------------------"""
     """ connect to the database         """
     """---------------------------------"""
+    table_name = 'events'
     sql_connector = SQLConnector(database_type, database_name,
                                  user, password,
-                                 host, port,
-                                 echo=(not commit))  # do not print sql command in production mode
+                                 host, port, table_name=table_name,
+                                 echo=False)  # do not print sql commands
+    """----------------------------------"""
+    """ run data pipeline                """
+    """----------------------------------"""
+    engine = sql_connector.get_engine()
+    connection = engine.connect()
+    transaction = connection.begin()
+
+    # process each input file
+    for full_path in files:
+        print('---processing ', full_path)
+        filename = os.path.split(full_path)[-1]
+
+        # read every input file by chunks of 10000 rows
+        chunks = pd.read_csv(full_path, sep=' ', header=None, dtype='str', chunksize=10000)
+
+        # process chunks in parallel
+        with parallel_backend("threading", n_jobs=8):
+            Parallel()(delayed(process_chunk)(df, engine, filename, database_type, table_name) for df in chunks)
+
+    # commit if all files are processed without error
+    if commit:  # commit only if user specify commit=True. This is to prevent loading the same data 2 times
+        transaction.commit()
+        print('Committed.')
+    else:
+        transaction.rollback()
+        print('But rolled back anyway. To commit, explicitly set commit=True in run_processor')
+
+    # close all current connections,
+    # otherwise new connections later would not work
+    engine.dispose()
+    print('Closed connection to the database')
+
+    #data_pipeline(sql_connector, database_type, files, commit)
 
     """----------------------------------"""
-    """ run data pipeline and API server """
+    """ API server                       """
     """----------------------------------"""
-    data_pipeline(sql_connector, database_type, files, commit)
-
-    api_server(sql_connector)
+    app = api_server(sql_connector, table_name)
+    app.run(port=8279, host='0.0.0.0')
