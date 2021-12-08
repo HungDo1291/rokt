@@ -5,7 +5,7 @@ The app is packaged in a Docker container that includes a data pipeline and an A
 Thanks to python `SQLAlchemy` libarary, this app does not use any raw SQL commands, and can ideally connect to any types of SQL dialect, be it MySQL or PostgreSQL, Redshift, BigQuery, etc. 
 At the moment two types of database are tested: `mysql+pymysql` (localhost MariaDB and AWS RDS) and `sqlite` (sqlite is stored in the container just for testing). 
 
-<img src="images/architecture_diagram.jpg" width="48">
+<img src="images/architecture_diagram.jpg" width="500">
 
 The Docker image is first built from a `Dockerfile`. From the same image, multiple containers can be run to connect to different external databases. The database connection details are passed to the container at run time by using environment variables.
 
