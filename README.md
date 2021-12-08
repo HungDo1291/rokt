@@ -3,7 +3,7 @@
 
 As a solution, the app is packaged in a Docker container that includes a SQL connector, a data pipeline, and an API server. The SQL database is connected externally to store parsed data.
 
-<img src="images/architecture_diagram.jpg" width="700">
+<img src="images/architecture_diagram.jpg" width="500">
 
 The Docker image is first built from a `Dockerfile`. From the same image, multiple containers can be run to connect to different external databases. The database connection details are passed to the container at run time by using environment variables.
 
