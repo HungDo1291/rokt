@@ -22,11 +22,11 @@ def api_server(sql_connector, table_name='events'):
 
         filename = req['filename']
         from_time = pd.to_datetime(req["from"]).strftime('%Y-%m-%d %H:%M:%S')
-        to_time = pd.to_datetime(req["from"]).strftime('%Y-%m-%d %H:%M:%S')
+        to_time = pd.to_datetime(req["to"]).strftime('%Y-%m-%d %H:%M:%S')
 
         command = t.select().where(sqla.and_(t.c.filename == filename,
                                              t.c.datetime >= from_time,
-                                             t.c.datetime >= to_time
+                                             t.c.datetime <= to_time
                                              )
                                    )
 
