@@ -1,5 +1,5 @@
 # 1. Introduction
-`rokt` is an application that parses input text files  and then exposes an API for querying with POST requests. 
+`rokt` is an application developed by Hung Do to parse input text files  and then expose an API for querying with POST requests. 
 
 As a solution, the app is packaged in a Docker container that includes a SQL connector, a data pipeline, and an API server. The SQL database is connected externally to store parsed data.
 
